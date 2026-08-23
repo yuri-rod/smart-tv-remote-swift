@@ -14,6 +14,10 @@ let package = Package(
             name: "SmartCastKit",
             targets: ["SmartCastKit"]
         ),
+        .executable(
+            name: "smartcast",
+            targets: ["smartcast"]
+        ),
     ],
     dependencies: [],
     targets: [
@@ -21,6 +25,11 @@ let package = Package(
             name: "SmartCastKit",
             dependencies: [],
             path: "Sources/SmartCastKit"
+        ),
+        .executableTarget(
+            name: "smartcast",
+            dependencies: ["SmartCastKit"],
+            path: "Sources/CLI"
         ),
         .testTarget(
             name: "SmartCastKitTests",
