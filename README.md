@@ -1,6 +1,21 @@
-# smartcast & SmartCastKit
+# SmartCastKit & smartcast 📺⚡
 
-A lightweight, zero-dependency Swift CLI and framework for Smart TV discovery, remote control, and media casting across iOS, macOS, tvOS, and watchOS.
+```
+  ███████╗███╗   ███╗ █████╗ ██████╗ ████████╗ ██████╗ █████╗ ███████╗████████╗
+  ██╔════╝████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝██╔════╝██╔══██╗██╔════╝╚══██╔══╝
+  ███████╗██╔████╔██║███████║██████╔╝   ██║   ██║     ███████║███████╗   ██║   
+  ╚════██║██║╚██╔╝██║██╔══██║██╔══██╗   ██║   ██║     ██╔══██║╚════██║   ██║   
+  ███████║██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   ╚██████╗██║  ██║███████║   ██║   
+  ╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝╚══════╝   ╚═╝   
+```
+
+**Lightweight, zero-dependency Swift CLI and framework for Smart TV discovery, remote control, and media casting across iOS, macOS, tvOS, and watchOS.**
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Swift: 5.9 | 6.0](https://img.shields.io/badge/swift-5.9%20%7C%206.0-orange.svg)](https://swift.org)
+[![Platform: iOS | macOS | tvOS | watchOS](https://img.shields.io/badge/platform-iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS-lightgrey.svg)]()
+[![Tests: 8 passed](https://img.shields.io/badge/tests-8%20passed-brightgreen.svg)]()
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Donate-yellow.svg?style=flat&logo=buy-me-a-coffee)](https://buymeacoffee.com/yurirod)
 
 ```bash
 # Discover TVs, control volume, and cast media from your terminal
@@ -14,14 +29,14 @@ $ smartcast cast 192.168.1.50 http://192.168.1.100:8096/stream.mp4
 
 ## Highlights
 
-- Zero external dependencies. Built entirely with Swift standard library, `Network.framework`, and `Foundation`.
-- Resilient network discovery. Combines SSDP multicast M-SEARCH with automatic local /24 subnet unicast probing.
-- Samsung Smart TVs (2016+ Tizen OS). WebSocket protocol on port 8002 with token pairing, key simulation, text input injection, and app launch.
-- Samsung Smart TVs (Pre-2015 Legacy). Binary wire protocol frame serialization over raw TCP port 55000.
-- Roku TVs and Streaming Sticks. External Control Protocol (ECP) over HTTP for keypresses, app listing, and deep links.
-- DLNA / UPnP Media Renderers. DIDL-Lite v1.0 XML metadata generation, SOAP AVTransport (Play, Pause, Stop, Seek, status polling), and RenderingControl volume.
-- Wake-on-LAN. UDP magic packet generator (port 9) to power on sleeping devices.
-- Swift 6 Concurrency. Fully Sendable, actor-isolated scanner, and built with modern async/await.
+- **Zero external dependencies:** Built entirely with Swift standard library, `Network.framework`, and `Foundation`.
+- **Resilient network discovery:** Combines SSDP multicast M-SEARCH with automatic local /24 subnet unicast probing.
+- **Samsung Smart TVs (2016+ Tizen OS):** WebSocket protocol on port 8002 with token pairing, key simulation, text input injection, and app launch.
+- **Samsung Smart TVs (Pre-2015 Legacy):** Binary wire protocol frame serialization over raw TCP port 55000.
+- **Roku TVs and Streaming Sticks:** External Control Protocol (ECP) over HTTP for keypresses, app listing, and deep links.
+- **DLNA / UPnP Media Renderers:** DIDL-Lite v1.0 XML metadata generation, SOAP AVTransport (Play, Pause, Stop, Seek, status polling), and RenderingControl volume.
+- **Wake-on-LAN:** UDP magic packet generator (port 9) to power on sleeping devices.
+- **Swift 6 Concurrency:** Fully Sendable, actor-isolated scanner, and built with modern async/await.
 
 ---
 
@@ -240,6 +255,14 @@ SmartCastKit
 
 ---
 
+## Support & Sponsorship
+
+If SmartCastKit or smartcast saved you time or powered your home automation setup, consider buying me a coffee:
+
+<a href="https://buymeacoffee.com/yurirod"><img src="https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=☕&slug=yurirod&button_colour=FFDD00&font_colour=000000&font_family=Inter&outline_colour=000000&coffee_colour=ffffff" /></a>
+
+---
+
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details.
+MIT License (c) 2026 Yuri Barreira
