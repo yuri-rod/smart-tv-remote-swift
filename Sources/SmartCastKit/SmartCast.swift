@@ -18,6 +18,8 @@ public enum SmartCast {
             return SamsungLegacyRemoteAdapter(client: SamsungLegacyClient(ip: device.ip, appName: appName))
         case .roku:
             return RokuRemoteAdapter(client: RokuClient(ip: device.ip))
+        case .lgWebOS:
+            return LGWebOSRemoteAdapter(client: LGWebOSClient(ip: device.ip, clientKey: token))
         default:
             return nil
         }
@@ -109,6 +111,23 @@ final class RokuRemoteAdapter: AnyRemoteController {
                 try await client.sendKey(.custom(encoded))
             }
         }
+    }
+}
+
+final class LGWebOSRemoteAdapter: AnyRemoteController {
+    let client: LGWebOSClient
+
+    init(client: LGWebOSClient) {
+        self.client = client
+        client.connect()
+    }
+
+    func sendKey(_ key: RemoteKey) async throws {
+        try await client.sendKey(key)
+    }
+
+    func sendText(_ text: String) async throws {
+        try await client.sendText(text)
     }
 }
 

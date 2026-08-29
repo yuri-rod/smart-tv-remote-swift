@@ -72,6 +72,24 @@ final class SmartCastKitTests: XCTestCase {
         XCTAssertEqual(SamsungTizenClient.parseToken(fromConnectEvent: json), "987654321")
     }
 
+    func testLGWebOSRegistrationAndKeyParsing() {
+        let payloadWithKey = LGWebOSClient.makeRegistrationPayload(clientKey: "lg_key_123")
+        XCTAssertEqual(payloadWithKey["type"] as? String, "register")
+        let innerPayload = payloadWithKey["payload"] as? [String: Any]
+        XCTAssertEqual(innerPayload?["client-key"] as? String, "lg_key_123")
+
+        let jsonResponse = """
+        {
+            "type": "registered",
+            "id": "register_0",
+            "payload": {
+                "client-key": "secret_lg_key_456"
+            }
+        }
+        """
+        XCTAssertEqual(LGWebOSClient.parseClientKey(fromResponse: jsonResponse), "secret_lg_key_456")
+    }
+
     func testWakeOnLANMagicPacket() {
         let mac = "00:11:22:33:44:55"
         let payload = WakeOnLAN.magicPacketPayload(for: mac)
@@ -95,5 +113,14 @@ final class SmartCastKitTests: XCTestCase {
         )
         XCTAssertEqual(tv.preferredRemoteTransport, .samsungTizen)
         XCTAssertEqual(tv.preferredPlaybackTransport, .dlna)
+
+        let lgTV = Device(
+            ip: "192.168.1.43",
+            name: "LG OLED C3",
+            manufacturer: "LG Electronics",
+            model: "OLED65C3",
+            supportedTransports: [.lgWebOS, .dlna]
+        )
+        XCTAssertEqual(lgTV.preferredRemoteTransport, .lgWebOS)
     }
 }

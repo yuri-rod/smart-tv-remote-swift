@@ -11,10 +11,11 @@
 
 **Lightweight, zero-dependency Swift CLI and framework for Smart TV discovery, remote control, and media casting across iOS, macOS, tvOS, and watchOS.**
 
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](Package.swift)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Swift: 5.9 | 6.0](https://img.shields.io/badge/swift-5.9%20%7C%206.0-orange.svg)](https://swift.org)
 [![Platform: iOS | macOS | tvOS | watchOS](https://img.shields.io/badge/platform-iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS-lightgrey.svg)]()
-[![Tests: 8 passed](https://img.shields.io/badge/tests-8%20passed-brightgreen.svg)]()
+[![Tests: 9 passed](https://img.shields.io/badge/tests-9%20passed-brightgreen.svg)]()
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Donate-yellow.svg?style=flat&logo=buy-me-a-coffee)](https://buymeacoffee.com/yurirod)
 
 ```bash
@@ -23,6 +24,7 @@ $ smartcast scan
 $ smartcast key 192.168.1.50 volup
 $ smartcast text 192.168.1.50 "Avatar 4K"
 $ smartcast cast 192.168.1.50 http://192.168.1.100:8096/stream.mp4
+$ smartcast volume 192.168.1.50 25
 ```
 
 ---
@@ -33,10 +35,11 @@ $ smartcast cast 192.168.1.50 http://192.168.1.100:8096/stream.mp4
 - **Resilient network discovery:** Combines SSDP multicast M-SEARCH with automatic local /24 subnet unicast probing.
 - **Samsung Smart TVs (2016+ Tizen OS):** WebSocket protocol on port 8002 with token pairing, key simulation, text input injection, and app launch.
 - **Samsung Smart TVs (Pre-2015 Legacy):** Binary wire protocol frame serialization over raw TCP port 55000.
+- **LG Smart TVs (webOS 3.0+):** SSAP WebSocket protocol on port 3000/3001 with pairing keys, volume controls, toast messages, and app launching.
 - **Roku TVs and Streaming Sticks:** External Control Protocol (ECP) over HTTP for keypresses, app listing, and deep links.
 - **DLNA / UPnP Media Renderers:** DIDL-Lite v1.0 XML metadata generation, SOAP AVTransport (Play, Pause, Stop, Seek, status polling), and RenderingControl volume.
 - **Wake-on-LAN:** UDP magic packet generator (port 9) to power on sleeping devices.
-- **Swift 6 Concurrency:** Fully Sendable, actor-isolated scanner, and built with modern async/await.
+- **Swift 6 Concurrency:** Fully Sendable, actor-isolated scanner, and built with modern async/await and `@main` CLI entrypoint.
 
 ---
 
@@ -68,7 +71,14 @@ cp .build/release/smartcast /usr/local/bin/
 | `key` | `<ip> <key_name>` | Sends remote keypress to TV | `smartcast key 192.168.1.50 volup` |
 | `text` | `<ip> <string>` | Injects text into active TV search/input field | `smartcast text 192.168.1.50 "Sci-Fi"` |
 | `launch` | `<ip> <app_id>` | Launches app by ID | `smartcast launch 192.168.1.50 org.tizen.netflix-app` |
+| `apps` | `<ip>` | Lists installed apps on device (Roku) | `smartcast apps 192.168.1.50` |
+| `volume` | `<ip> <0-100>` | Sets playback/rendering volume level | `smartcast volume 192.168.1.50 25` |
+| `mute` | `<ip>` | Toggles TV mute state | `smartcast mute 192.168.1.50` |
 | `cast` | `<ip> <video_url>` | Casts media URL via DLNA AVTransport | `smartcast cast 192.168.1.50 http://.../video.mp4` |
+| `pause` | `<ip>` | Pauses active DLNA media playback | `smartcast pause 192.168.1.50` |
+| `resume` | `<ip>` | Resumes paused DLNA media playback | `smartcast resume 192.168.1.50` |
+| `stop` | `<ip>` | Stops active DLNA media playback | `smartcast stop 192.168.1.50` |
+| `toast` | `<ip> <msg>` | Shows on-screen notification toast (LG webOS) | `smartcast toast 192.168.1.50 "Dinner is ready"` |
 | `wake` | `<mac_address>` | Broadcasts Wake-on-LAN magic packet | `smartcast wake AA:BB:CC:DD:EE:FF` |
 | `version` | none | Prints version information | `smartcast version` |
 
