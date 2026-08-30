@@ -11,7 +11,7 @@
 
 **Lightweight, zero-dependency Swift CLI and framework for Smart TV discovery, remote control, and media casting across iOS, macOS, tvOS, and watchOS.**
 
-[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](Package.swift)
+[![Version](https://img.shields.io/badge/version-1.1.1-blue.svg)](Package.swift)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Swift: 5.9 | 6.0](https://img.shields.io/badge/swift-5.9%20%7C%206.0-orange.svg)](https://swift.org)
 [![Platform: iOS | macOS | tvOS | watchOS](https://img.shields.io/badge/platform-iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS-lightgrey.svg)]()

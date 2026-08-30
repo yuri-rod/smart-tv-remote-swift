@@ -1,7 +1,7 @@
 import Foundation
 import SmartCastKit
 
-let version = "1.1.0"
+let version = "1.1.1"
 
 func printUsage() {
     let help = """
