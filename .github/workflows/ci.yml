@@ -21,3 +21,9 @@ jobs:
 
       - name: Run Tests
         run: swift test -v
+
+      # The release build is the only path that goes through the Xcode build
+      # system, and it rejects things the single-arch native build accepts.
+      # Without this step a tag can fail to produce a binary while CI is green.
+      - name: Build Release Universal Binary
+        run: swift build -c release --arch arm64 --arch x86_64
