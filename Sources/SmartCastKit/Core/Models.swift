@@ -8,6 +8,18 @@ public enum DeviceTransport: String, CaseIterable, Codable, Sendable {
     case roku = "roku"
     case lgWebOS = "lg_webos"
     case googleCast = "google_cast"
+
+    /// Parses the short names accepted by the CLI `--transport` flag.
+    public init?(cliName: String) {
+        switch cliName.lowercased() {
+        case "tizen", "samsung", "samsung_tizen": self = .samsungTizen
+        case "legacy", "samsung_legacy": self = .samsungLegacy
+        case "roku": self = .roku
+        case "lg", "webos", "lg_webos": self = .lgWebOS
+        case "dlna": self = .dlna
+        default: return nil
+        }
+    }
 }
 
 /// Unified physical or network device discovered on the local network.

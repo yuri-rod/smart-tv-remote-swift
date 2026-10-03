@@ -8,6 +8,12 @@ public enum SmartCast {
         return await scanner.scan(timeout: timeout)
     }
 
+    /// Probes one host and returns the remote-control transports with open ports.
+    public static func probe(ip: String) async -> [DeviceTransport] {
+        let scanner = DeviceScanner()
+        return await scanner.probe(ip: ip)
+    }
+
     /// Creates a remote controller client for the given device using its preferred remote transport.
     public static func remote(for device: Device, appName: String = "SmartCastKit", token: String? = nil) -> AnyRemoteController? {
         guard let transport = device.preferredRemoteTransport else { return nil }
@@ -65,7 +71,6 @@ final class SamsungTizenRemoteAdapter: AnyRemoteController {
 
     init(client: SamsungTizenClient) {
         self.client = client
-        client.connect()
     }
 
     func sendKey(_ key: RemoteKey) async throws {
@@ -119,7 +124,6 @@ final class LGWebOSRemoteAdapter: AnyRemoteController {
 
     init(client: LGWebOSClient) {
         self.client = client
-        client.connect()
     }
 
     func sendKey(_ key: RemoteKey) async throws {

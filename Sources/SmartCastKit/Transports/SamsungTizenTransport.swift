@@ -54,6 +54,33 @@ public final class SamsungTizenClient: @unchecked Sendable {
         return eventData["token"] as? String
     }
 
+    /// Connects and suspends until the TV accepts the pairing, rejects it, or the timeout elapses.
+    /// Call this instead of ``connect()`` when the next statement needs a live channel.
+    public func connectAndWait(timeout: TimeInterval = 15) async throws {
+        connect()
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            switch state {
+            case .connected:
+                return
+            case .failed(let message):
+                throw SamsungTizenError.connectionFailed(message)
+            case .disconnected:
+                throw SamsungTizenError.notConnected
+            case .connecting:
+                try await Task.sleep(nanoseconds: 100_000_000)
+            }
+        }
+        disconnect()
+        throw SamsungTizenError.timeout
+    }
+
+    /// Ensures a live channel, pairing only when the current state is not connected.
+    public func ensureConnected(timeout: TimeInterval = 15) async throws {
+        if case .connected = state { return }
+        try await connectAndWait(timeout: timeout)
+    }
+
     public func connect() {
         guard let url = Self.connectionURL(ip: ip, appName: appName, token: token) else {
             updateState(.failed("Invalid WebSocket URL"))
@@ -109,6 +136,7 @@ public final class SamsungTizenClient: @unchecked Sendable {
     }
 
     public func sendKey(_ key: RemoteKey) async throws {
+        try await ensureConnected()
         guard let code = tizenKeyCode(for: key) else {
             throw SamsungTizenError.unsupportedKey
         }
@@ -126,6 +154,7 @@ public final class SamsungTizenClient: @unchecked Sendable {
     }
 
     public func sendText(_ text: String) async throws {
+        try await ensureConnected()
         let base64Text = Data(text.utf8).base64EncodedString()
         let payload: [String: Any] = [
             "method": "ms.remote.control",
@@ -140,6 +169,7 @@ public final class SamsungTizenClient: @unchecked Sendable {
     }
 
     public func launchApp(appId: String) async throws {
+        try await ensureConnected()
         let payload: [String: Any] = [
             "method": "ms.channel.emit",
             "params": [
@@ -224,12 +254,16 @@ public enum SamsungTizenError: LocalizedError {
     case notConnected
     case unsupportedKey
     case invalidPayload
+    case connectionFailed(String)
+    case timeout
 
     public var errorDescription: String? {
         switch self {
         case .notConnected: return "Samsung Tizen TV is not connected."
         case .unsupportedKey: return "The specified key is not supported on Samsung Tizen."
         case .invalidPayload: return "Failed to serialize JSON payload for Samsung Tizen."
+        case .connectionFailed(let message): return "Samsung Tizen connection failed: \(message)."
+        case .timeout: return "Timed out waiting for the Samsung TV to accept pairing. Accept the on-screen prompt and retry."
         }
     }
 }

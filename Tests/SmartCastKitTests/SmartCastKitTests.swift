@@ -103,6 +103,37 @@ final class SmartCastKitTests: XCTestCase {
         XCTAssertNil(WakeOnLAN.magicPacketPayload(for: "invalid_mac"))
     }
 
+    func testTransportCLINames() {
+        XCTAssertEqual(DeviceTransport(cliName: "tizen"), .samsungTizen)
+        XCTAssertEqual(DeviceTransport(cliName: "samsung"), .samsungTizen)
+        XCTAssertEqual(DeviceTransport(cliName: "legacy"), .samsungLegacy)
+        XCTAssertEqual(DeviceTransport(cliName: "roku"), .roku)
+        XCTAssertEqual(DeviceTransport(cliName: "lg"), .lgWebOS)
+        XCTAssertEqual(DeviceTransport(cliName: "webos"), .lgWebOS)
+        XCTAssertEqual(DeviceTransport(cliName: "lg_webos"), .lgWebOS)
+        XCTAssertNil(DeviceTransport(cliName: "chromecast"))
+    }
+
+    func testLGButtonMessageFormat() {
+        XCTAssertEqual(LGWebOSClient.buttonMessage(name: "UP"), "type:button\nname:UP\n\n")
+        XCTAssertEqual(LGWebOSClient.buttonMessage(name: "5"), "type:button\nname:5\n\n")
+    }
+
+    func testLGMessageTypeAndIdParsing() {
+        let json = """
+        {
+            "type": "response",
+            "id": "req_3",
+            "payload": {
+                "socketPath": "wss://192.168.1.43:3001/api/input"
+            }
+        }
+        """
+        XCTAssertEqual(LGWebOSClient.parseMessageType(fromResponse: json), "response")
+        XCTAssertEqual(LGWebOSClient.parseMessageId(fromResponse: json), "req_3")
+        XCTAssertNil(LGWebOSClient.parseMessageId(fromResponse: "not json"))
+    }
+
     func testDevicePreferredTransports() {
         let tv = Device(
             ip: "192.168.1.42",

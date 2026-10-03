@@ -1,6 +1,5 @@
 import Foundation
 import Network
-import Combine
 import os
 
 private let logger = Logger(subsystem: "com.smartcastkit", category: "scanner")
@@ -12,6 +11,7 @@ public actor DeviceScanner {
 
     private var discoveredDevices: [String: Device] = [:]
     private var isScanning = false
+    private var activeConnections: [NWConnection] = []
 
     public init() {}
 
@@ -44,8 +44,14 @@ public actor DeviceScanner {
         // Wait for responses up to timeout
         try? await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
         isScanning = false
+        cancelActiveConnections()
 
         return Array(discoveredDevices.values).sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    /// Probes one host for remote-control transports by checking each known port.
+    public func probe(ip: String) async -> [DeviceTransport] {
+        await probeDevicePorts(ip: ip)
     }
 
     private func sendSSDPQuery(target: String) async {
@@ -67,6 +73,7 @@ public actor DeviceScanner {
             port: nwPort,
             using: .udp
         )
+        activeConnections.append(connection)
 
         connection.stateUpdateHandler = { [weak self] state in
             guard let self else { return }
@@ -183,6 +190,13 @@ public actor DeviceScanner {
         }
     }
 
+    private func cancelActiveConnections() {
+        for connection in activeConnections {
+            connection.cancel()
+        }
+        activeConnections.removeAll()
+    }
+
     private func probeDevicePorts(ip: String) async -> [DeviceTransport] {
         var transports: [DeviceTransport] = []
 
@@ -197,6 +211,12 @@ public actor DeviceScanner {
         // Probe 55000 (Samsung Legacy)
         if await isPortOpen(ip: ip, port: 55000) {
             transports.append(.samsungLegacy)
+        }
+        // Probe 3001/3000 (LG webOS, TLS first for 2023+ firmware)
+        if await isPortOpen(ip: ip, port: 3001) {
+            transports.append(.lgWebOS)
+        } else if await isPortOpen(ip: ip, port: 3000) {
+            transports.append(.lgWebOS)
         }
 
         return transports
@@ -310,7 +330,8 @@ public actor DeviceScanner {
                     getnameinfo(interface.ifa_addr, socklen_t(interface.ifa_addr.pointee.sa_len),
                                 &hostname, socklen_t(hostname.count),
                                 nil, socklen_t(0), NI_NUMERICHOST)
-                    address = String(cString: hostname)
+                    let bytes = hostname.prefix(while: { $0 != 0 }).map { UInt8(bitPattern: $0) }
+                    address = String(decoding: bytes, as: UTF8.self)
                     break
                 }
             }

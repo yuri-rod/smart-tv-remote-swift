@@ -5,7 +5,7 @@ class Smartcast < Formula
   sha256 "8aa0f94f8aecb28ba11a69da21759e1206a9e9f41edc58cb3e788391c6044955"
   license "MIT"
 
-  depends_on xcode: ["15.0", :build]
+  depends_on xcode: ["16.3", :build]
 
   def install
     system "swift", "build", "-c", "release", "--disable-sandbox"

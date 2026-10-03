@@ -1,7 +1,7 @@
 import Foundation
 import SmartCastKit
 
-let version = "1.1.1"
+let version = "1.2.0"
 
 func printUsage() {
     let help = """
@@ -12,7 +12,11 @@ func printUsage() {
 
     SUBCOMMANDS:
         scan                          Discover all Smart TVs and media renderers on LAN
+        probe <ip>                    Check which remote-control transports answer on one host
         key <ip> <key_name>           Send remote control key (power, volup, voldown, mute, home, etc.)
+
+    FLAGS:
+        --transport <name>            Force one transport for key/text/mute (tizen, legacy, roku, lg)
         text <ip> <string>            Inject text into active input field
         launch <ip> <app_id>          Launch app by ID (e.g. org.tizen.netflix-app, 12 for Roku, netflix for LG)
         apps <ip>                     List installed applications on device (Roku)
@@ -29,7 +33,9 @@ func printUsage() {
 
     EXAMPLES:
         smartcast scan
+        smartcast probe 192.168.1.50
         smartcast key 192.168.1.50 volup
+        smartcast --transport lg key 192.168.1.50 up
         smartcast text 192.168.1.50 "Avatar 4K"
         smartcast cast 192.168.1.50 http://192.168.1.100:8096/movie.mp4
         smartcast volume 192.168.1.50 25
@@ -70,6 +76,41 @@ func parseKey(_ name: String) -> RemoteKey? {
     }
 }
 
+/// Strips `--transport <name>` / `--transport=<name>` from the args and returns the rest.
+func extractTransportFlag(from args: [String]) -> (remaining: [String], transport: DeviceTransport?) {
+    var remaining: [String] = []
+    var transport: DeviceTransport?
+    var index = 0
+    while index < args.count {
+        let arg = args[index]
+        if arg == "--transport", index + 1 < args.count {
+            transport = DeviceTransport(cliName: args[index + 1])
+            if transport == nil {
+                print("Error: Unknown transport '\(args[index + 1])'. Use tizen, legacy, roku, or lg.")
+                exit(1)
+            }
+            index += 2
+        } else if arg.hasPrefix("--transport=") {
+            let name = String(arg.dropFirst("--transport=".count))
+            transport = DeviceTransport(cliName: name)
+            if transport == nil {
+                print("Error: Unknown transport '\(name)'. Use tizen, legacy, roku, or lg.")
+                exit(1)
+            }
+            index += 1
+        } else {
+            remaining.append(arg)
+            index += 1
+        }
+    }
+    return (remaining, transport)
+}
+
+func remoteDevice(ip: String, forcedTransport: DeviceTransport?) -> Device {
+    let transports = forcedTransport.map { [$0] } ?? [.samsungTizen, .lgWebOS, .samsungLegacy, .roku]
+    return Device(ip: ip, name: "Target TV", supportedTransports: transports)
+}
+
 func dlnaCaster(for ip: String) -> AnyMediaCaster? {
     let avURL = URL(string: "http://\(ip):52235/upnp/control/AVTransport1") ?? URL(string: "http://\(ip):52235/AVTransport/control")!
     let rcURL = URL(string: "http://\(ip):52235/upnp/control/RenderingControl1") ?? URL(string: "http://\(ip):52235/RenderingControl/control")
@@ -81,7 +122,8 @@ func dlnaCaster(for ip: String) -> AnyMediaCaster? {
 @main
 struct SmartCastCLI {
     static func main() async {
-        let args = Array(CommandLine.arguments.dropFirst())
+        let rawArgs = Array(CommandLine.arguments.dropFirst())
+        let (args, forcedTransport) = extractTransportFlag(from: rawArgs)
 
         guard let command = args.first else {
             printUsage()
@@ -109,6 +151,24 @@ struct SmartCastCLI {
             }
             print("--------------------------------------------------------------------------------\n")
 
+        case "probe":
+            guard args.count >= 2 else {
+                print("Usage: smartcast probe <ip>")
+                exit(1)
+            }
+            let ip = args[1]
+            print("Probing \(ip) for remote-control transports...")
+            let found = await SmartCast.probe(ip: ip)
+            if found.isEmpty {
+                print("No known TV remote ports open on \(ip).")
+            } else {
+                print("Reachable transports on \(ip):")
+                for t in found {
+                    print("  - \(t.rawValue)")
+                }
+                print("Use e.g. smartcast --transport \(found[0].rawValue) key \(ip) volup")
+            }
+
         case "key", "press":
             guard args.count >= 3 else {
                 print("Error: Missing IP address or key name.")
@@ -122,7 +182,7 @@ struct SmartCastCLI {
                 exit(1)
             }
 
-            let device = Device(ip: ip, name: "Target TV", supportedTransports: [.samsungTizen, .lgWebOS, .samsungLegacy, .roku])
+            let device = remoteDevice(ip: ip, forcedTransport: forcedTransport)
             guard let remote = SmartCast.remote(for: device) else {
                 print("Error: Failed to initialize remote controller for \(ip).")
                 exit(1)
@@ -145,7 +205,7 @@ struct SmartCastCLI {
             let ip = args[1]
             let text = args[2]
 
-            let device = Device(ip: ip, name: "Target TV", supportedTransports: [.samsungTizen, .lgWebOS, .samsungLegacy, .roku])
+            let device = remoteDevice(ip: ip, forcedTransport: forcedTransport)
             guard let remote = SmartCast.remote(for: device) else {
                 print("Error: Failed to initialize remote controller for \(ip).")
                 exit(1)
@@ -169,7 +229,6 @@ struct SmartCastCLI {
             let appId = args[2]
 
             let tizen = SamsungTizenClient(ip: ip)
-            tizen.connect()
 
             do {
                 try await tizen.launchApp(appId: appId)
@@ -224,7 +283,7 @@ struct SmartCastCLI {
                 exit(1)
             }
             let ip = args[1]
-            let device = Device(ip: ip, name: "Target TV", supportedTransports: [.samsungTizen, .roku, .lgWebOS])
+            let device = remoteDevice(ip: ip, forcedTransport: forcedTransport)
             if let remote = SmartCast.remote(for: device) {
                 do {
                     try await remote.sendKey(.mute)
@@ -302,7 +361,6 @@ struct SmartCastCLI {
             let ip = args[1]
             let msg = args.dropFirst(2).joined(separator: " ")
             let lg = LGWebOSClient(ip: ip)
-            lg.connect()
             do {
                 try await lg.showToast(message: msg)
                 print("Showed toast '\(msg)' on \(ip)")
