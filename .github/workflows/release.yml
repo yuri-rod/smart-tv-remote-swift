@@ -4,27 +4,44 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing version tag to build and attach to its GitHub release
+        required: true
+        type: string
 
 jobs:
   release:
-    runs-on: macos-14
+    runs-on: macos-15
     permissions:
       contents: write
     steps:
+      - name: Validate release tag
+        if: inputs.release_tag != ''
+        env:
+          RELEASE_TAG: "${{ inputs.release_tag }}"
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_tag || github.ref }}
 
       - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+        run: sudo xcode-select -s /Applications/Xcode.app
 
       - name: Build Release Binary
         run: |
           swift build -c release --arch arm64 --arch x86_64
-          cp .build/apple/Products/Release/smartcast smartcast
+          bin_path="$(swift build -c release --show-bin-path)"
+          cp "$bin_path/smartcast" smartcast
           tar -czf smartcast-macos-universal.tar.gz smartcast
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ inputs.release_tag || github.ref_name }}
           files: smartcast-macos-universal.tar.gz
           generate_release_notes: true
