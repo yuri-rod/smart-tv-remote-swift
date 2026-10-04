@@ -34,7 +34,9 @@ jobs:
 
       - name: Build Release Binary
         run: |
+          swift build -c release --arch arm64
           arm64_bin_path="$(swift build -c release --arch arm64 --show-bin-path)"
+          swift build -c release --arch x86_64
           x86_64_bin_path="$(swift build -c release --arch x86_64 --show-bin-path)"
           lipo -create "$arm64_bin_path/smartcast" "$x86_64_bin_path/smartcast" -output smartcast
           archs="$(lipo -archs smartcast)"
