@@ -36,9 +36,10 @@ jobs:
         run: |
           swift build -c release --arch arm64
           arm64_bin_path="$(swift build -c release --arch arm64 --show-bin-path)"
+          cp "$arm64_bin_path/smartcast" "$RUNNER_TEMP/smartcast-arm64"
           swift build -c release --arch x86_64
           x86_64_bin_path="$(swift build -c release --arch x86_64 --show-bin-path)"
-          lipo -create "$arm64_bin_path/smartcast" "$x86_64_bin_path/smartcast" -output smartcast
+          lipo -create "$RUNNER_TEMP/smartcast-arm64" "$x86_64_bin_path/smartcast" -output smartcast
           archs="$(lipo -archs smartcast)"
           [[ "$archs" == *arm64* && "$archs" == *x86_64* ]]
           tar -czf smartcast-macos-universal.tar.gz smartcast

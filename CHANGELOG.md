@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.1 (2026-10-27)
+
+- Return a nonzero exit status when pause, resume, stop or mute commands fail. Rejected playback commands no longer print a success message.
+- Add loopback HTTP tests for successful and rejected CLI commands, without requiring a TV or scanning a network.
+- Correct command help and document protocol selection, pairing, fixed DLNA endpoints and transport-security limits.
+- Use the runner's default Xcode and preserve the arm64 release slice before building x86_64, including when both builds share an output directory. Verify both architectures before packaging.
+- Allow the release workflow to rebuild an existing version tag and limit normal CI repository permissions to read-only.
+
 ## 1.2.0 (2026-10-03)
 
 Toolchain upgrade to Swift 6.1 / full Swift 6 language mode, plus the four most impactful fixes: transport selection, pairing reliability, LG navigation, and SSDP cleanup.
