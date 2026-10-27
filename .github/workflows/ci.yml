@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
   build-and-test:
     runs-on: macos-15
@@ -21,6 +24,9 @@ jobs:
 
       - name: Run Tests
         run: swift test -v
+
+      - name: Check CLI success and failure responses
+        run: python3 Tests/cli_smoke.py
 
       # The release build is the only path that goes through the Xcode build
       # system, and it rejects things the single-arch native build accepts.

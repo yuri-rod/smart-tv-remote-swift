@@ -1,285 +1,107 @@
-# SmartCastKit & smartcast 📺⚡
+# SmartCastKit and smartcast
 
-```
-  ███████╗███╗   ███╗ █████╗ ██████╗ ████████╗ ██████╗ █████╗ ███████╗████████╗
-  ██╔════╝████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝██╔════╝██╔══██╗██╔════╝╚══██╔══╝
-  ███████╗██╔████╔██║███████║██████╔╝   ██║   ██║     ███████║███████╗   ██║   
-  ╚════██║██║╚██╔╝██║██╔══██║██╔══██╗   ██║   ██║     ██╔══██║╚════██║   ██║   
-  ███████║██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   ╚██████╗██║  ██║███████║   ██║   
-  ╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝╚══════╝   ╚═╝   
-```
+A Swift library and macOS CLI for discovering TVs, sending remote commands and controlling DLNA playback on a local network.
 
-**Lightweight, zero-dependency Swift CLI and framework for Smart TV discovery, remote control, and media casting across iOS, macOS, tvOS, and watchOS.**
+Use it to build a remote-control app or script a TV you own. The package has no external dependencies: it uses Foundation, Network and Security frameworks. Protocol clients are separate from the device model and CLI, so applications can use a specific transport directly.
 
-[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](Package.swift)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Swift: 6.1](https://img.shields.io/badge/swift-6.1-orange.svg)](https://swift.org)
-[![Platform: iOS | macOS | tvOS | watchOS](https://img.shields.io/badge/platform-iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS-lightgrey.svg)]()
-[![Tests: 12 passed](https://img.shields.io/badge/tests-12%20passed-brightgreen.svg)]()
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Donate-yellow.svg?style=flat&logo=buy-me-a-coffee)](https://buymeacoffee.com/yurirod)
+## Build and try it
 
-```bash
-# Discover TVs, control volume, and cast media from your terminal
-$ smartcast scan
-$ smartcast key 192.168.1.50 volup
-$ smartcast text 192.168.1.50 "Avatar 4K"
-$ smartcast cast 192.168.1.50 http://192.168.1.100:8096/stream.mp4
-$ smartcast volume 192.168.1.50 25
-```
+Use a Swift 6.1 or later toolchain. The package declares macOS 12, iOS 15, tvOS 15 and watchOS 8 minimum versions; CI builds and tests on macOS.
 
----
-
-## Highlights
-
-- **Zero external dependencies:** Built entirely with Swift standard library, `Network.framework`, and `Foundation`.
-- **Resilient network discovery:** Combines SSDP multicast M-SEARCH with automatic local /24 subnet unicast probing.
-- **Samsung Smart TVs (2016+ Tizen OS):** WebSocket protocol on port 8002 with token pairing, key simulation, text input injection, and app launch.
-- **Samsung Smart TVs (Pre-2015 Legacy):** Binary wire protocol frame serialization over raw TCP port 55000.
-- **LG Smart TVs (webOS 3.0+):** SSAP WebSocket protocol on port 3000/3001 with pairing keys, volume controls, toast messages, app launching, and full D-pad navigation over the pointer input socket.
-- **Roku TVs and Streaming Sticks:** External Control Protocol (ECP) over HTTP for keypresses, app listing, and deep links.
-- **DLNA / UPnP Media Renderers:** DIDL-Lite v1.0 XML metadata generation, SOAP AVTransport (Play, Pause, Stop, Seek, status polling), and RenderingControl volume.
-- **Wake-on-LAN:** UDP magic packet generator (port 9) to power on sleeping devices.
-- **Swift 6 Concurrency:** Fully Sendable, actor-isolated scanner, and built with modern async/await and `@main` CLI entrypoint.
-
----
-
-## CLI Installation
-
-### Homebrew (macOS)
-
-```bash
-brew tap yuri-rod/tap https://github.com/yuri-rod/smart-tv-remote-swift
-brew install smartcast
-```
-
-### Build from Source
-
-```bash
+```sh
 git clone https://github.com/yuri-rod/smart-tv-remote-swift.git
 cd smart-tv-remote-swift
 swift build -c release
-cp .build/release/smartcast /usr/local/bin/
+"$(swift build -c release --show-bin-path)/smartcast" version
 ```
 
----
+Output:
 
-## CLI Command Reference
+```text
+smartcast v1.2.0
+```
 
-| Command | Arguments | Description | Example |
-| :--- | :--- | :--- | :--- |
-| `scan` | none | Scans local network for TVs and media renderers | `smartcast scan` |
-| `probe` | `<ip>` | Checks which remote-control transports answer on one host | `smartcast probe 192.168.1.50` |
-| `key` | `<ip> <key_name>` | Sends remote keypress to TV | `smartcast key 192.168.1.50 volup` |
-| `text` | `<ip> <string>` | Injects text into active TV search/input field | `smartcast text 192.168.1.50 "Sci-Fi"` |
-| `launch` | `<ip> <app_id>` | Launches app by ID | `smartcast launch 192.168.1.50 org.tizen.netflix-app` |
-| `apps` | `<ip>` | Lists installed apps on device (Roku) | `smartcast apps 192.168.1.50` |
-| `volume` | `<ip> <0-100>` | Sets playback/rendering volume level | `smartcast volume 192.168.1.50 25` |
-| `mute` | `<ip>` | Toggles TV mute state | `smartcast mute 192.168.1.50` |
-| `cast` | `<ip> <video_url>` | Casts media URL via DLNA AVTransport | `smartcast cast 192.168.1.50 http://.../video.mp4` |
-| `pause` | `<ip>` | Pauses active DLNA media playback | `smartcast pause 192.168.1.50` |
-| `resume` | `<ip>` | Resumes paused DLNA media playback | `smartcast resume 192.168.1.50` |
-| `stop` | `<ip>` | Stops active DLNA media playback | `smartcast stop 192.168.1.50` |
-| `toast` | `<ip> <msg>` | Shows on-screen notification toast (LG webOS) | `smartcast toast 192.168.1.50 "Dinner is ready"` |
-| `wake` | `<mac_address>` | Broadcasts Wake-on-LAN magic packet | `smartcast wake AA:BB:CC:DD:EE:FF` |
-| `version` | none | Prints version information | `smartcast version` |
+Run the CLI from that build directory, or copy the binary to a directory on your `PATH`. On macOS, tests need Xcode's XCTest framework. If Command Line Tools is selected, set `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` for the build and test commands.
 
-### Global Flags
+Before contacting a TV, run the offline tests:
 
-| Flag | Applies to | Description | Example |
-| :--- | :--- | :--- | :--- |
-| `--transport <name>` | `key`, `text`, `mute` | Forces one transport instead of auto-selecting Samsung first (`tizen`, `legacy`, `roku`, `lg`) | `smartcast --transport lg key 192.168.1.50 up` |
+```sh
+swift test
+python3 Tests/cli_smoke.py
+```
 
-### Supported Remote Keys
+The Swift tests exercise protocol frames, metadata, pairing response parsing and transport selection. The CLI tests use HTTP fixtures on `127.0.0.1:52235` and `127.0.0.1:8060`; those ports must be free. They verify both successful responses and rejected commands without scanning the network or requiring a TV.
 
-| Key Name | Aliases | Description |
-| :--- | :--- | :--- |
-| `power` | `poweroff` | Power toggle / Off |
-| `volup` | `volumeup`, `volume_up` | Volume Up |
-| `voldown` | `volumedown`, `volume_down` | Volume Down |
-| `mute` | | Toggle Mute |
-| `up`, `down`, `left`, `right` | | Directional D-Pad navigation |
-| `enter` | `select`, `ok` | Select / OK |
-| `back` | `return` | Back / Return |
-| `home` | | Return to Smart TV Home menu |
-| `menu` | `info` | Settings menu or info overlay |
-| `play`, `pause`, `playpause` | | Media playback controls |
-| `stop` | | Stop playback |
-| `rewind`, `rev` | | Rewind media |
-| `ff`, `fastforward`, `fwd` | | Fast forward media |
-| `chup`, `chdown` | | Channel Up / Down |
-| `0` to `9` | | Number keys |
+## Control a TV
 
----
+Replace the example address with your device's address. Run discovery only on a network you are authorized to scan.
 
-## Swift Package Installation
+```sh
+smartcast probe 192.168.1.50
+smartcast --transport roku key 192.168.1.50 home
+smartcast --transport lg key 192.168.1.51 up
+smartcast --transport tizen key 192.168.1.52 volup
+```
 
-Add `SmartCastKit` as a dependency in your `Package.swift`:
+`probe` checks known ports on one host. `scan` sends SSDP multicast queries and probes the local IPv4 /24 subnet. An open port is a transport hint, not confirmation of a device's make or capabilities.
+
+`key`, `text` and `mute` default to Samsung Tizen. Use `--transport tizen|legacy|roku|lg` to select another protocol. Samsung and LG may show a pairing prompt. The CLI does not persist pairing tokens between invocations.
+
+| Command | Behavior |
+| --- | --- |
+| `scan` / `probe <ip>` | Discover devices / probe one host |
+| `key <ip> <key>` | Send a remote key, such as `home`, `up`, `volup` or `enter` |
+| `text <ip> "text"` | Send text through the selected transport; LG currently displays a toast |
+| `mute <ip>` | Toggle mute |
+| `launch <ip> <app_id>` | Launch a Samsung Tizen app |
+| `apps <ip>` | List Roku apps |
+| `cast <ip> <video_url>` | Give a DLNA renderer a media URL |
+| `volume <ip> <0-100>` | Set DLNA RenderingControl volume |
+| `pause <ip>` / `resume <ip>` / `stop <ip>` | Control DLNA playback |
+| `toast <ip> "message"` | Show an LG notification |
+| `wake <mac_address>` | Send a Wake-on-LAN packet |
+
+The CLI's DLNA commands use fixed Samsung-style control endpoints on port 52235. For other renderers, use the library with discovered or explicitly supplied `DLNAEndpoints`. The TV must be able to fetch a cast media URL itself; this package does not host or transcode local files.
+
+## Use the library
+
+Add the repository URL in Xcode's package dependencies and select the `SmartCastKit` product, or add it to a Swift package:
 
 ```swift
-dependencies: [
-    .package(url: "https://github.com/yuri-rod/smart-tv-remote-swift.git", from: "1.0.0")
-]
+.package(url: "https://github.com/yuri-rod/smart-tv-remote-swift.git", from: "1.2.0")
 ```
 
-Or in Xcode: **File** > **Add Package Dependencies...** and enter the repository URL.
-
-### iOS Configuration (`Info.plist`)
-
-When integrating `SmartCastKit` into an iOS or iPadOS application, Apple requires the Local Network Privacy permission. Add the following keys to your app's `Info.plist`:
-
-```xml
-<key>NSLocalNetworkUsageDescription</key>
-<string>This app requires local network access to discover and control Smart TVs.</string>
-<key>NSBonjourServices</key>
-<array>
-    <string>_googlecast._tcp</string>
-    <string>_airplay._tcp</string>
-</array>
-```
-
----
-
-## Swift Library Usage
-
-### 1. Discover Devices on Local Network
+Add `.product(name: "SmartCastKit", package: "smart-tv-remote-swift")` to your target dependencies. A direct client avoids discovery when you already know the device and protocol:
 
 ```swift
 import SmartCastKit
 
-// Scan for all Smart TVs, DLNA renderers, and Roku devices
-let devices = await SmartCast.scan(timeout: 4.0)
-
-for device in devices {
-    print("Found \(device.name) at \(device.ip)")
-    print("Manufacturer: \(device.manufacturer ?? "Unknown")")
-    print("Supported transports: \(device.supportedTransports)")
+let roku = RokuClient(ip: "192.168.1.50")
+try await roku.sendKey(.home)
+let apps = try await roku.queryApps()
+for app in apps {
+    print("\(app.id): \(app.name)")
 }
 ```
 
-### 2. Send Remote Keystrokes & Text
+For DLNA, `SmartCast.caster(for:)` uses the device's `dlnaEndpoints`. It supports play, pause, resume, stop, seek, volume and playback status. Samsung and LG clients expose pairing callbacks so an application can persist tokens in its own credential store.
 
-```swift
-guard let device = devices.first,
-      let remote = SmartCast.remote(for: device) else { return }
+## Implementation and verification
 
-// Send physical key events
-try await remote.sendKey(.power)
-try await remote.sendKey(.volumeUp)
-try await remote.sendKey(.home)
-try await remote.sendKey(.enter)
+- [Device models and transport preferences](Sources/SmartCastKit/Core/Models.swift) keep discovery results separate from protocol clients.
+- [Discovery](Sources/SmartCastKit/Discovery/DeviceScanner.swift) combines SSDP descriptors with TCP port probes.
+- [Transport clients](Sources/SmartCastKit/Transports) implement Samsung Tizen, legacy Samsung, Roku, LG webOS and DLNA.
+- [Protocol tests](Tests/SmartCastKitTests/SmartCastKitTests.swift) use synthetic frames and messages. [CLI response tests](Tests/cli_smoke.py) verify command exit status against loopback fixtures.
+- [CI](.github/workflows/ci.yml) builds, runs both test suites and builds a universal macOS binary. To reproduce the universal build: `swift build -c release --arch arm64 --arch x86_64`.
 
-// Send text to active on-screen search inputs (YouTube, browser, etc.)
-try await remote.sendText("Avatar 4K HDR")
-```
+Contributions should include a fixture or regression test for the protocol behavior being changed. Hardware results should identify the TV model, firmware and command tested. Unit tests do not establish compatibility with every device or Apple platform.
 
-### 3. Cast Video / Media (DLNA AVTransport)
+## Operational limits
 
-```swift
-guard let device = devices.first(where: { $0.supportedTransports.contains(.dlna) }),
-      let caster = SmartCast.caster(for: device) else { return }
+Use trusted local networks and endpoints. Samsung and LG sessions use a delegate that accepts self-signed certificates without certificate or host pinning; it does not authenticate the TV's identity. Roku, legacy Samsung, DLNA and the current LG default connection use unencrypted protocols.
 
-let media = MediaItem(
-    url: URL(string: "http://192.168.1.100:8096/videos/movie.mp4")!,
-    title: "Interstellar",
-    mimeType: "video/mp4",
-    posterURL: URL(string: "http://192.168.1.100:8096/posters/movie.jpg")!,
-    durationSeconds: 10140.0
-)
+Discovery assumes a /24 IPv4 network and can take longer than its response-wait timeout. The library declares a Google Cast transport enum but does not implement a Cast client. LG text input currently maps to notifications, and the LG connection builder uses `ws` even when a TLS port is supplied. These are implementation limits, not hardware compatibility guarantees.
 
-// Start playback
-try await caster.play(media: media)
+Embedding apps must configure their platform's local-network access and transport permissions. Device firmware, pairing settings and network isolation can prevent commands from reaching a TV. Wake-on-LAN also depends on the device's standby network settings.
 
-// Control playback
-try await caster.setVolume(25)
-try await caster.seek(to: 3600.0) // 1 hour mark
-try await caster.pause()
-
-// Poll live status
-let status = try await caster.playbackStatus()
-print("Playback state: \(status.state), Position: \(status.positionSeconds)s")
-```
-
-### 4. Samsung Tizen Pairing with Token Store
-
-When connecting to a Samsung Tizen TV for the first time, an authorization prompt appears on the TV screen. Once accepted, the TV issues an authorization token. Save this token to bypass future pairing prompts:
-
-```swift
-let savedToken = UserDefaults.standard.string(forKey: "samsung_tv_token")
-let tizen = SamsungTizenClient(ip: "192.168.1.50", appName: "MyRemoteApp", token: savedToken)
-
-tizen.onTokenReceived = { newToken in
-    UserDefaults.standard.set(newToken, forKey: "samsung_tv_token")
-}
-
-tizen.connect()
-
-// Launch installed apps directly
-try await tizen.launchApp(appId: "org.tizen.netflix-app")
-```
-
-### 5. Wake TV via Wake-on-LAN
-
-```swift
-// Send UDP port 9 magic packet
-try await WakeOnLAN.wake(macAddress: "AA:BB:CC:DD:EE:FF")
-```
-
----
-
-## Architecture
-
-```text
-SmartCastKit
-├── Core
-│   └── Models.swift                 Unified device model, transport enum, remote keys, media descriptors
-├── Discovery
-│   └── DeviceScanner.swift          SSDP multicast M-SEARCH combined with /24 subnet probing
-├── Transports
-│   ├── SamsungTizenTransport.swift  WebSocket port 8002 protocol with token pairing & app launching
-│   ├── SamsungLegacyTransport.swift Raw TCP port 55000 binary wire frame serializer
-│   ├── DLNATransport.swift          SOAP AVTransport & RenderingControl client with DIDL-Lite metadata
-│   └── RokuTransport.swift          HTTP ECP client for keypresses and app launching
-├── Utilities
-│   ├── LocalTrustDelegate.swift     Self-signed TLS evaluator for local appliances
-│   └── WakeOnLAN.swift              102-byte magic packet generator
-├── CLI
-│   └── main.swift                   High-performance command-line interface
-└── SmartCast.swift                  High-level developer facade
-```
-
----
-
-## Troubleshooting
-
-### Device Not Discovered
-1. Ensure your Mac or iOS device is on the same local Wi-Fi network and subnet as the TV.
-2. If your router uses separate 2.4 GHz and 5 GHz bands with AP isolation enabled, devices on different bands cannot communicate directly.
-3. On iOS, verify that Local Network permission has been granted in iOS Settings.
-
-### Samsung TV Pairing & Wake-on-LAN
-1. On modern Samsung TVs, navigate to **Settings** > **General** > **Network** > **Expert Settings** and enable:
-   - **Power On with Mobile** (required for Wake-on-LAN to work while TV is in standby).
-   - **IP Remote** (required for WebSocket port 8002 remote control).
-2. If the TV previously rejected connection from your app name, go to **Settings** > **General** > **External Device Manager** > **Device Connection Manager** > **Device List** and remove the rejected client.
-
----
-
-## Requirements
-
-- iOS 15.0+ / macOS 12.0+ / tvOS 15.0+ / watchOS 8.0+
-- Swift 6.1+ (Swift 6 language mode)
-- Xcode 16.3+
-
----
-
-## Support & Sponsorship
-
-If SmartCastKit or smartcast saved you time or powered your home automation setup, consider buying me a coffee:
-
-<a href="https://buymeacoffee.com/yurirod"><img src="https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=☕&slug=yurirod&button_colour=FFDD00&font_colour=000000&font_family=Inter&outline_colour=000000&coffee_colour=ffffff" /></a>
-
----
-
-## License
-
-MIT License (c) 2026 Yuri Barreira
+[MIT license](LICENSE). [Support the project](https://buymeacoffee.com/yurirod).

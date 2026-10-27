@@ -15,21 +15,21 @@ func printUsage() {
         probe <ip>                    Check which remote-control transports answer on one host
         key <ip> <key_name>           Send remote control key (power, volup, voldown, mute, home, etc.)
 
-    FLAGS:
-        --transport <name>            Force one transport for key/text/mute (tizen, legacy, roku, lg)
-        text <ip> <string>            Inject text into active input field
-        launch <ip> <app_id>          Launch app by ID (e.g. org.tizen.netflix-app, 12 for Roku, netflix for LG)
+        text <ip> <string>            Send text (LG displays a toast)
+        launch <ip> <app_id>          Launch a Samsung Tizen app by ID
         apps <ip>                     List installed applications on device (Roku)
         volume <ip> <0-100>           Set playback/rendering volume level
-        mute <ip> [on|off]            Mute or unmute TV audio
+        mute <ip>                     Toggle TV mute
         cast <ip> <video_url>         Cast video stream URL via DLNA
         pause <ip>                    Pause active DLNA media playback
         resume <ip>                   Resume paused DLNA media playback
         stop <ip>                     Stop active DLNA media playback
-        seek <ip> <seconds>           Seek DLNA media to position in seconds
         toast <ip> <message>          Display on-screen notification toast (LG webOS)
         wake <mac_address>            Send Wake-on-LAN magic packet to wake TV
         version                       Print version information
+
+    FLAGS:
+        --transport <name>            Select transport for key/text/mute (tizen, legacy, roku, lg)
 
     EXAMPLES:
         smartcast scan
@@ -279,7 +279,7 @@ struct SmartCastCLI {
         case "mute":
             guard args.count >= 2 else {
                 print("Error: Missing IP address.")
-                print("Usage: smartcast mute <ip> [on|off]")
+                print("Usage: smartcast mute <ip>")
                 exit(1)
             }
             let ip = args[1]
@@ -290,6 +290,7 @@ struct SmartCastCLI {
                     print("Toggled mute on \(ip)")
                 } catch {
                     print("Error toggling mute: \(error.localizedDescription)")
+                    exit(1)
                 }
             }
 
@@ -327,8 +328,13 @@ struct SmartCastCLI {
             }
             let ip = args[1]
             if let caster = dlnaCaster(for: ip) {
-                try? await caster.pause()
-                print("Paused playback on \(ip)")
+                do {
+                    try await caster.pause()
+                    print("Paused playback on \(ip)")
+                } catch {
+                    print("Error during pause: \(error.localizedDescription)")
+                    exit(1)
+                }
             }
 
         case "resume":
@@ -338,8 +344,13 @@ struct SmartCastCLI {
             }
             let ip = args[1]
             if let caster = dlnaCaster(for: ip) {
-                try? await caster.resume()
-                print("Resumed playback on \(ip)")
+                do {
+                    try await caster.resume()
+                    print("Resumed playback on \(ip)")
+                } catch {
+                    print("Error during resume: \(error.localizedDescription)")
+                    exit(1)
+                }
             }
 
         case "stop":
@@ -349,8 +360,13 @@ struct SmartCastCLI {
             }
             let ip = args[1]
             if let caster = dlnaCaster(for: ip) {
-                try? await caster.stop()
-                print("Stopped playback on \(ip)")
+                do {
+                    try await caster.stop()
+                    print("Stopped playback on \(ip)")
+                } catch {
+                    print("Error during stop: \(error.localizedDescription)")
+                    exit(1)
+                }
             }
 
         case "toast":
