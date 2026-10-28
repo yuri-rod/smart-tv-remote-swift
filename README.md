@@ -18,7 +18,7 @@ swift build -c release
 Output:
 
 ```text
-smartcast v1.2.1
+smartcast v1.2.2
 ```
 
 Run the CLI from that build directory, or copy the binary to a directory on your `PATH`. On macOS, tests need Xcode's XCTest framework. If Command Line Tools is selected, set `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` for the build and test commands.
@@ -68,7 +68,7 @@ The CLI's DLNA commands use fixed Samsung-style control endpoints on port 52235.
 Add the repository URL in Xcode's package dependencies and select the `SmartCastKit` product, or add it to a Swift package:
 
 ```swift
-.package(url: "https://github.com/yuri-rod/smart-tv-remote-swift.git", from: "1.2.1")
+.package(url: "https://github.com/yuri-rod/smart-tv-remote-swift.git", from: "1.2.2")
 ```
 
 Add `.product(name: "SmartCastKit", package: "smart-tv-remote-swift")` to your target dependencies. A direct client avoids discovery when you already know the device and protocol:

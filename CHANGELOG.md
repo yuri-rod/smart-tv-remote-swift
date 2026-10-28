@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.2 (2026-10-28)
+
+- Share playback-command argument validation and error handling while preserving pause, resume and stop results.
+- Build the universal release binary directly with Swift Package Manager, using the same build command as CI.
+
 ## 1.2.1 (2026-10-27)
 
 - Return a nonzero exit status when pause, resume, stop or mute commands fail. Rejected playback commands no longer print a success message.

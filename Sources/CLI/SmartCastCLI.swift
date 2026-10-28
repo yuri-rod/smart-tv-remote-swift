@@ -1,7 +1,7 @@
 import Foundation
 import SmartCastKit
 
-let version = "1.2.1"
+let version = "1.2.2"
 
 func printUsage() {
     let help = """
@@ -321,50 +321,28 @@ struct SmartCastCLI {
                 exit(1)
             }
 
-        case "pause":
+        case "pause", "resume", "stop":
+            let action = command.lowercased()
             guard args.count >= 2 else {
-                print("Usage: smartcast pause <ip>")
+                print("Usage: smartcast \(action) <ip>")
                 exit(1)
             }
             let ip = args[1]
             if let caster = dlnaCaster(for: ip) {
                 do {
-                    try await caster.pause()
-                    print("Paused playback on \(ip)")
+                    switch action {
+                    case "pause":
+                        try await caster.pause()
+                        print("Paused playback on \(ip)")
+                    case "resume":
+                        try await caster.resume()
+                        print("Resumed playback on \(ip)")
+                    default:
+                        try await caster.stop()
+                        print("Stopped playback on \(ip)")
+                    }
                 } catch {
-                    print("Error during pause: \(error.localizedDescription)")
-                    exit(1)
-                }
-            }
-
-        case "resume":
-            guard args.count >= 2 else {
-                print("Usage: smartcast resume <ip>")
-                exit(1)
-            }
-            let ip = args[1]
-            if let caster = dlnaCaster(for: ip) {
-                do {
-                    try await caster.resume()
-                    print("Resumed playback on \(ip)")
-                } catch {
-                    print("Error during resume: \(error.localizedDescription)")
-                    exit(1)
-                }
-            }
-
-        case "stop":
-            guard args.count >= 2 else {
-                print("Usage: smartcast stop <ip>")
-                exit(1)
-            }
-            let ip = args[1]
-            if let caster = dlnaCaster(for: ip) {
-                do {
-                    try await caster.stop()
-                    print("Stopped playback on \(ip)")
-                } catch {
-                    print("Error during stop: \(error.localizedDescription)")
+                    print("Error during \(action): \(error.localizedDescription)")
                     exit(1)
                 }
             }
