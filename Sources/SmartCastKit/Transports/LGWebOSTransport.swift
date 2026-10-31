@@ -14,6 +14,7 @@ public final class LGWebOSClient: @unchecked Sendable {
 
     public let ip: String
     public let port: UInt16
+    public let pinnedFingerprint: String?
     private var clientKey: String?
     private var webSocket: URLSessionWebSocketTask?
     private var urlSession: URLSession?
@@ -32,10 +33,11 @@ public final class LGWebOSClient: @unchecked Sendable {
     public var onStateChange: (@Sendable (ConnectionState) -> Void)?
     public var onClientKeyReceived: (@Sendable (String) -> Void)?
 
-    public init(ip: String, port: UInt16 = 3000, clientKey: String? = nil) {
+    public init(ip: String, port: UInt16 = 3000, clientKey: String? = nil, pinnedFingerprint: String? = nil) {
         self.ip = ip
         self.port = port
         self.clientKey = clientKey
+        self.pinnedFingerprint = pinnedFingerprint
     }
 
     public static func connectionURL(ip: String, port: UInt16) -> URL? {
@@ -149,7 +151,12 @@ public final class LGWebOSClient: @unchecked Sendable {
         }
 
         updateState(.connecting)
-        let session = URLSession(configuration: .default, delegate: LocalTrustDelegate.shared, delegateQueue: nil)
+        let delegate: URLSessionDelegate = if let pinnedFingerprint {
+            LocalTrustDelegate(pinnedFingerprints: [pinnedFingerprint], allowUnpinnedOnLocalNetwork: false)
+        } else {
+            LocalTrustDelegate.shared
+        }
+        let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
         self.urlSession = session
         let task = session.webSocketTask(with: url)
         self.webSocket = task

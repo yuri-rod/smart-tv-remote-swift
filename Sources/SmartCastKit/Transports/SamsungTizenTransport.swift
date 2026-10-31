@@ -14,6 +14,7 @@ public final class SamsungTizenClient: @unchecked Sendable {
 
     public let ip: String
     public let appName: String
+    public let pinnedFingerprint: String?
     private var token: String?
     private var webSocket: URLSessionWebSocketTask?
     private var urlSession: URLSession?
@@ -29,10 +30,11 @@ public final class SamsungTizenClient: @unchecked Sendable {
     public var onStateChange: (@Sendable (ConnectionState) -> Void)?
     public var onTokenReceived: (@Sendable (String) -> Void)?
 
-    public init(ip: String, appName: String = "SmartCastKit", token: String? = nil) {
+    public init(ip: String, appName: String = "SmartCastKit", token: String? = nil, pinnedFingerprint: String? = nil) {
         self.ip = ip
         self.appName = appName
         self.token = token
+        self.pinnedFingerprint = pinnedFingerprint
     }
 
     public static func connectionURL(ip: String, appName: String, token: String?) -> URL? {
@@ -88,7 +90,12 @@ public final class SamsungTizenClient: @unchecked Sendable {
         }
 
         updateState(.connecting)
-        let session = URLSession(configuration: .default, delegate: LocalTrustDelegate.shared, delegateQueue: nil)
+        let delegate: URLSessionDelegate = if let pinnedFingerprint {
+            LocalTrustDelegate(pinnedFingerprints: [pinnedFingerprint], allowUnpinnedOnLocalNetwork: false)
+        } else {
+            LocalTrustDelegate.shared
+        }
+        let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
         self.urlSession = session
         let task = session.webSocketTask(with: url)
         self.webSocket = task

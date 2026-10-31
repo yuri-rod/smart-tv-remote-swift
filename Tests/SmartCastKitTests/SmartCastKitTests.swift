@@ -171,4 +171,20 @@ final class SmartCastKitTests: XCTestCase {
         XCTAssertFalse(LocalTrustDelegate.isPrivateOrLocalHost("172.32.0.1"))
         XCTAssertFalse(LocalTrustDelegate.isPrivateOrLocalHost("193.168.1.1"))
     }
+
+    func testLocalTrustDelegateFingerprintPinning() {
+        let rawFingerprint = "AA:BB:CC:DD:ee:ff:00:11:22:33:44:55:66:77:88:99:aa:bb:cc:dd:ee:ff:00:11:22:33:44:55:66:77:88:99"
+        let normalized = LocalTrustDelegate.normalizeFingerprint(rawFingerprint)
+        XCTAssertEqual(normalized, "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899")
+
+        let delegate = LocalTrustDelegate(pinnedFingerprints: [rawFingerprint], allowUnpinnedOnLocalNetwork: false)
+        XCTAssertTrue(delegate.pinnedFingerprints.contains(normalized))
+        XCTAssertFalse(delegate.allowUnpinnedOnLocalNetwork)
+
+        let samsung = SamsungTizenClient(ip: "192.168.1.50", pinnedFingerprint: rawFingerprint)
+        XCTAssertEqual(samsung.pinnedFingerprint, rawFingerprint)
+
+        let lg = LGWebOSClient(ip: "192.168.1.60", pinnedFingerprint: rawFingerprint)
+        XCTAssertEqual(lg.pinnedFingerprint, rawFingerprint)
+    }
 }
