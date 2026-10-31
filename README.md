@@ -98,10 +98,20 @@ Contributions should include a fixture or regression test for the protocol behav
 
 ## Operational limits
 
-Use trusted local networks and endpoints. Samsung and LG sessions use a delegate that accepts self-signed certificates without certificate or host pinning; it does not authenticate the TV's identity. Roku, legacy Samsung, DLNA and the current LG default connection use unencrypted protocols.
+Use trusted local networks and endpoints. Samsung and LG sessions use a delegate that accepts self-signed certificates exclusively on private and local network addresses (RFC 1918, link-local, loopback, and .local hosts). Public domains and internet IPs fall back to standard system TLS verification. Roku, legacy Samsung, DLNA and the current LG default connection use unencrypted LAN protocols.
 
 Discovery assumes a /24 IPv4 network and can take longer than its response-wait timeout. The library declares a Google Cast transport enum but does not implement a Cast client. LG text input currently maps to notifications, and the LG connection builder uses `ws` even when a TLS port is supplied. These are implementation limits, not hardware compatibility guarantees.
 
 Embedding apps must configure their platform's local-network access and transport permissions. Device firmware, pairing settings and network isolation can prevent commands from reaching a TV. Wake-on-LAN also depends on the device's standby network settings.
+
+## Technical roadmap
+
+Realistic planned engineering milestones:
+
+1. Native SwiftUI component library for iOS and tvOS (12 hours): Package reusable view components for directional remote pads, volume sliders, and media playback scrubbers across Apple platforms.
+2. DLNA position tracking and playback polling (8 hours): Implement continuous polling of UPnP AVTransport `GetPositionInfo` to surface current track progress and duration events to callers.
+3. LG WebOS secure WebSocket migration (6 hours): Upgrade LG transport connection builders to negotiate secure WebSockets over port 3001 using the verified local trust delegate.
+
+## License
 
 [MIT license](LICENSE). [Support the project](https://buymeacoffee.com/yurirod).
