@@ -1,0 +1,2 @@
+# Gitleaks ignore list for false-positive mock unit test fixtures
+870aba2b3ecc82f7bc9c3a8fd7950d5bd4817592:Tests/SmartCastKitTests/SmartCastKitTests.swift:generic-api-key:86

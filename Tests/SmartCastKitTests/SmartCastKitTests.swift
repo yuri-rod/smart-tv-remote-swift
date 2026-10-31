@@ -83,11 +83,11 @@ final class SmartCastKitTests: XCTestCase {
             "type": "registered",
             "id": "register_0",
             "payload": {
-                "client-key": "secret_lg_key_456"
+                "client-key": "mock_lg_key_456"
             }
         }
         """
-        XCTAssertEqual(LGWebOSClient.parseClientKey(fromResponse: jsonResponse), "secret_lg_key_456")
+        XCTAssertEqual(LGWebOSClient.parseClientKey(fromResponse: jsonResponse), "mock_lg_key_456")
     }
 
     func testWakeOnLANMagicPacket() {
@@ -153,5 +153,22 @@ final class SmartCastKitTests: XCTestCase {
             supportedTransports: [.lgWebOS, .dlna]
         )
         XCTAssertEqual(lgTV.preferredRemoteTransport, .lgWebOS)
+    }
+
+    func testLocalTrustDelegateHostValidation() {
+        XCTAssertTrue(LocalTrustDelegate.isPrivateOrLocalHost("localhost"))
+        XCTAssertTrue(LocalTrustDelegate.isPrivateOrLocalHost("samsung-tv.local"))
+        XCTAssertTrue(LocalTrustDelegate.isPrivateOrLocalHost("127.0.0.1"))
+        XCTAssertTrue(LocalTrustDelegate.isPrivateOrLocalHost("192.168.1.50"))
+        XCTAssertTrue(LocalTrustDelegate.isPrivateOrLocalHost("10.0.0.15"))
+        XCTAssertTrue(LocalTrustDelegate.isPrivateOrLocalHost("172.16.0.1"))
+        XCTAssertTrue(LocalTrustDelegate.isPrivateOrLocalHost("172.31.255.254"))
+        XCTAssertTrue(LocalTrustDelegate.isPrivateOrLocalHost("169.254.1.1"))
+        XCTAssertTrue(LocalTrustDelegate.isPrivateOrLocalHost("::1"))
+
+        XCTAssertFalse(LocalTrustDelegate.isPrivateOrLocalHost("example.com"))
+        XCTAssertFalse(LocalTrustDelegate.isPrivateOrLocalHost("8.8.8.8"))
+        XCTAssertFalse(LocalTrustDelegate.isPrivateOrLocalHost("172.32.0.1"))
+        XCTAssertFalse(LocalTrustDelegate.isPrivateOrLocalHost("193.168.1.1"))
     }
 }
